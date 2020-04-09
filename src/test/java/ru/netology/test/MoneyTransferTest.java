@@ -32,7 +32,7 @@ public class MoneyTransferTest {
     @ParameterizedTest
     @CsvFileSource(resources = "/validTransferParams.csv", numLinesToSkip = 1)
     @DisplayName("Тест на перевод средств на сумму 5000")
-    void transferBetweenCards(int recipientIndex, int senderIndex, String recipientCardNumber, String senderCardNumber) throws InterruptedException {
+    void transferBetweenCards(int recipientIndex, int senderIndex, String recipientCardNumber, String senderCardNumber)  {
         int amountTransfer = 5000;
         val recipientCardBalanceBeforeTransfer = dashboardPage.getBalance(recipientCardNumber);
         val senderCardBalanceBeforeTransfer = dashboardPage.getBalance(senderCardNumber);
@@ -47,7 +47,21 @@ public class MoneyTransferTest {
         val differenceSenderCard = senderCardBalanceBeforeTransfer - amountTransfer;
         assertEquals(recipientCardBalanceAfterTransfer, differenceRecipientCard);
         assertEquals(senderCardBalanceAfterTransfer, differenceSenderCard);
-        Thread.sleep(15000);
+    }
+
+    @ParameterizedTest
+    @CsvFileSource(resources = "/validTransferParams.csv", numLinesToSkip = 1)
+    @DisplayName("Тест на перевод средств превышающий баланс счета")
+    void transferAmountExceedsAvailableFunds (int recipientIndex, int senderIndex, String recipientCardNumber, String senderCardNumber){
+        int amountTransfer = 15_000;
+
+        val recipientCardBalanceAfterTransfer = dashboardPage.getBalance(recipientCardNumber);
+        int senderCardBalanceBeforeTransfer = dashboardPage.getBalance(senderCardNumber);
+
+        val moneyTransfer = dashboardPage.replenishCard(recipientIndex);
+        val cards = DataHelper.getCardInfo();
+        moneyTransfer.invalidTransferMoney(cards, amountTransfer, senderIndex);
+        moneyTransfer.assertErrorNotificationIsVisible();
     }
 }
 
